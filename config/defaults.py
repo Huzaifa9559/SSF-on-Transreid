@@ -183,6 +183,20 @@ _C.TEST.DIST_MAT = "dist_mat.npy"
 # Whether calculate the eval score option: 'True', 'False'
 _C.TEST.EVAL = False
 # ---------------------------------------------------------------------------- #
+# PEFT (Parameter-Efficient Fine-Tuning)
+# ---------------------------------------------------------------------------- #
+_C.PEFT = CN()
+_C.PEFT.SSF = CN()
+_C.PEFT.SSF.ENABLED = False
+# Empty tuple = all blocks; e.g. (6,7,8,9,10,11) = only those block indices
+_C.PEFT.SSF.BLOCKS = ()
+_C.PEFT.SSF.MERGE_ON_SAVE = False
+# 0.0 means use 10x BASE_LR
+_C.PEFT.SSF.LR = 0.0
+# Freeze all non-SSF backbone parameters when True
+_C.PEFT.SSF.FREEZE_BACKBONE = False
+
+# ---------------------------------------------------------------------------- #
 # Misc options
 # ---------------------------------------------------------------------------- #
 # Path to checkpoint and saved log of trained model

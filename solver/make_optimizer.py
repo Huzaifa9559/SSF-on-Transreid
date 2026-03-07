@@ -3,14 +3,21 @@ import torch
 
 def make_optimizer(cfg, model, center_criterion):
     params = []
+    ssf_lr = cfg.PEFT.SSF.LR if cfg.PEFT.SSF.LR > 0 else cfg.SOLVER.BASE_LR * 10
+
     for key, value in model.named_parameters():
         if not value.requires_grad:
             continue
         lr = cfg.SOLVER.BASE_LR
         weight_decay = cfg.SOLVER.WEIGHT_DECAY
-        if "bias" in key:
+
+        if 'ssf' in key:
+            lr = ssf_lr
+            weight_decay = 0.0
+        elif "bias" in key:
             lr = cfg.SOLVER.BASE_LR * cfg.SOLVER.BIAS_LR_FACTOR
             weight_decay = cfg.SOLVER.WEIGHT_DECAY_BIAS
+
         if cfg.SOLVER.LARGE_FC_LR:
             if "classifier" in key or "arcface" in key:
                 lr = cfg.SOLVER.BASE_LR * 2

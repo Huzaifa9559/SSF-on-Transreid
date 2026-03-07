@@ -143,13 +143,21 @@ class build_transformer(nn.Module):
 
         self.base = factory[cfg.MODEL.TRANSFORMER_TYPE](img_size=cfg.INPUT.SIZE_TRAIN, sie_xishu=cfg.MODEL.SIE_COE,
                                                         camera=camera_num, view=view_num, stride_size=cfg.MODEL.STRIDE_SIZE, drop_path_rate=cfg.MODEL.DROP_PATH,
-                                                        drop_rate= cfg.MODEL.DROP_OUT,
-                                                        attn_drop_rate=cfg.MODEL.ATT_DROP_RATE)
+                                                        drop_rate=cfg.MODEL.DROP_OUT,
+                                                        attn_drop_rate=cfg.MODEL.ATT_DROP_RATE,
+                                                        ssf_enabled=cfg.PEFT.SSF.ENABLED,
+                                                        ssf_blocks=cfg.PEFT.SSF.BLOCKS)
         if cfg.MODEL.TRANSFORMER_TYPE == 'deit_small_patch16_224_TransReID':
             self.in_planes = 384
         if pretrain_choice == 'imagenet':
             self.base.load_param(model_path)
             print('Loading pretrained ImageNet model......from {}'.format(model_path))
+
+        if cfg.PEFT.SSF.ENABLED and cfg.PEFT.SSF.FREEZE_BACKBONE:
+            for n, p in self.base.named_parameters():
+                if 'ssf' not in n:
+                    p.requires_grad = False
+            print('Backbone frozen — only SSF parameters are trainable')
 
         self.gap = nn.AdaptiveAvgPool2d(1)
 
@@ -234,11 +242,21 @@ class build_transformer_local(nn.Module):
         else:
             view_num = 0
 
-        self.base = factory[cfg.MODEL.TRANSFORMER_TYPE](img_size=cfg.INPUT.SIZE_TRAIN, sie_xishu=cfg.MODEL.SIE_COE, local_feature=cfg.MODEL.JPM, camera=camera_num, view=view_num, stride_size=cfg.MODEL.STRIDE_SIZE, drop_path_rate=cfg.MODEL.DROP_PATH)
+        self.base = factory[cfg.MODEL.TRANSFORMER_TYPE](img_size=cfg.INPUT.SIZE_TRAIN, sie_xishu=cfg.MODEL.SIE_COE,
+                                                        local_feature=cfg.MODEL.JPM, camera=camera_num, view=view_num,
+                                                        stride_size=cfg.MODEL.STRIDE_SIZE, drop_path_rate=cfg.MODEL.DROP_PATH,
+                                                        ssf_enabled=cfg.PEFT.SSF.ENABLED,
+                                                        ssf_blocks=cfg.PEFT.SSF.BLOCKS)
 
         if pretrain_choice == 'imagenet':
             self.base.load_param(model_path)
             print('Loading pretrained ImageNet model......from {}'.format(model_path))
+
+        if cfg.PEFT.SSF.ENABLED and cfg.PEFT.SSF.FREEZE_BACKBONE:
+            for n, p in self.base.named_parameters():
+                if 'ssf' not in n:
+                    p.requires_grad = False
+            print('Backbone frozen — only SSF parameters are trainable')
 
         block = self.base.blocks[-1]
         layer_norm = self.base.norm
