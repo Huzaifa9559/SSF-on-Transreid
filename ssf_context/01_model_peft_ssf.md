@@ -22,3 +22,4 @@ Returns a new SSF module initialized with those values.
 ## Parameter count
 Per SSF instance: `2 × hidden_dim` (gamma + beta)
 For ViT-Base (768-dim): 1,536 params per SSF module
+
